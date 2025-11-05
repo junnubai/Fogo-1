@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fogo Sessions Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .quiz-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+      padding: 24px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1f2937;
+    }
+    .question {
+      font-size: 18px;
+      margin-bottom: 16px;
+      font-weight: bold;
+      color: #111827;
+    }
+    .options button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: #f3f4f6;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .options button:hover {
+      background: #e5e7eb;
+    }
+    .options button.correct {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+    .options button.wrong {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #7f1d1d;
+    }
+    .next-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 12px;
+    }
+    .next-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .score {
+      text-align: center;
+      font-size: 20px;
+      color: #111827;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>🔥 Fogo Sessions Quiz 🔥</h1>
+    <div id="quiz">
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <button class="next-btn" id="nextBtn" disabled>Next</button>
+      <div class="score" id="score"></div>
+    </div>
+  </div>
+
+  <script>
+    const quizData = [
+      {
+        question: "What is the primary purpose of Fogo Sessions?",
+        options: [
+          "To allow token creation without fees",
+          "To enable users to interact with apps on the chain without paying gas or signing each individual transaction",
+          "To enable cross-chain transfers between Fogo and Ethereum",
+          "To provide wallet backup and recovery services"
+        ],
+        correct: 1
+      },
+      {
+        question: "What kind of tokens do Fogo Sessions support?",
+        options: [
+          "Native FOGO only",
+          "ERC-20 tokens on Ethereum",
+          "SPL tokens (on Fogo) but not native FOGO",
+          "NFTs only"
+        ],
+        correct: 2
+      },
+      {
+        question: "Which of the following is NOT a user-protection mechanism?",
+        options: [
+          "Domain field matching origin domain",
+          "Session expiry and renewal",
+          "Unlimited access to all tokens by default",
+          "Scoped permission limits"
+        ],
+        correct: 2
+      },
+      {
+        question: "Fogo Sessions are described as:",
+        options: [
+          "Gasless. Wallet-Agnostic. Built for Traders.",
+          "Only for institutional users.",
+          "Limited to NFTs and collectibles.",
+          "Requires manual signing each time."
+        ],
+        correct: 0
+      },
+      {
+        question: "What does “wallet-agnostic” mean?",
+        options: [
+          "Only one wallet supported",
+          "Any SVM-compatible wallet can be used",
+          "Wallets are deprecated",
+          "Only hardware wallets supported"
+        ],
+        correct: 1
+      },
+      {
+        question: "Which blockchain architecture does Fogo use?",
+        options: [
+          "EVM",
+          "Custom VM",
+          "Solana’s SVM (compatible)",
+          "Bitcoin UTXO"
+        ],
+        correct: 2
+      },
+      {
+        question: "When using <FogoSessionProvider />, what props are needed?",
+        options: [
+          "sponsor public key",
+          "paymasterUrl",
+          "endpoint (RPC URL)",
+          "All of the above"
+        ],
+        correct: 3
+      },
+      {
+        question: "Fogo Testnet block time is approximately:",
+        options: [
+          "1 second",
+          "40 milliseconds",
+          "500 milliseconds",
+          "5 seconds"
+        ],
+        correct: 1
+      },
+      {
+        question: "Key user benefit of Fogo Sessions:",
+        options: [
+          "Manual signing required",
+          "Apps can cover gas fees",
+          "Users pay high gas but get rewards",
+          "Only token transfers supported"
+        ],
+        correct: 1
+      },
+      {
+        question: "React hook for accessing session state is:",
+        options: [
+          "useWallet()",
+          "useSession()",
+          "useFogo()",
+          "useGasless()"
+        ],
+        correct: 1
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const nextBtn = document.getElementById("nextBtn");
+    const scoreEl = document.getElementById("score");
+
+    function loadQuestion() {
+      const q = quizData[current];
+      questionEl.textContent = q.question;
+      optionsEl.innerHTML = "";
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.onclick = () => selectAnswer(i, q.correct, btn);
+        optionsEl.appendChild(btn);
+      });
+      nextBtn.disabled = true;
+      scoreEl.textContent = "";
+    }
+
+    function selectAnswer(selected, correct, btn) {
+      const allButtons = optionsEl.querySelectorAll("button");
+      allButtons.forEach((b, i) => {
+        b.disabled = true;
+        if (i === correct) b.classList.add("correct");
+        if (i === selected && i !== correct) b.classList.add("wrong");
+      });
+      if (selected === correct) score++;
+      nextBtn.disabled = false;
+    }
+
+    nextBtn.addEventListener("click", () => {
+      current++;
+      if (current < quizData.length) {
+        loadQuestion();
+      } else {
+        showScore();
+      }
+    });
+
+    function showScore() {
+      questionEl.textContent = "🎉 Quiz Completed!";
+      optionsEl.innerHTML = "";
+      nextBtn.style.display = "none";
+      scoreEl.textContent = `Your score: ${score} / ${quizData.length}`;
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
